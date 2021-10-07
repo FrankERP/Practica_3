@@ -63,6 +63,7 @@ static void MX_I2C4_Init(void);
 static void MX_TIM5_Init(void);
 /* USER CODE BEGIN PFP */
 
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -132,6 +133,8 @@ Error_Handler();
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
   lcd_init();
+  MPU6050_init();
+  MPU6050_READ_TEMP();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -139,13 +142,13 @@ Error_Handler();
   while (1)
   {
 	  lcd_put_cur(0,0);
-	  lcd_send_string("Raul");
+	  lcd_send_string("Te quiero, Gabby");
 	  HAL_Delay(1000);
 	  lcd_put_cur(0,5);
-	  lcd_send_string("Frank");
+	  lcd_send_string("");
 	  lcd_put_cur(1,0);
 	  HAL_Delay(1000);
-	  lcd_send_string("Alex");
+	  lcd_send_string("");
 	  HAL_Delay(1000);
 	  lcd_clear();
 	  HAL_Delay(1000);
@@ -358,7 +361,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void MPU6050_init(void){ /*CONFIGURA LOS VALORES DEL ACELERÓMETRO*/
+	uint8_t check;     //almacenará valores provenientes del MPU6050.
+	uint8_t data;      // enviará datos al MPU6050.
+	HAL_I2C_Mem_Read(&hi2c4,MPU6050_ADDR,WHO_AM_I,1,&check,1,1000); //Lee la dirección del acelerómetro
+	if(check == 0x68){
+		data = 0; //ASIGNA EL VALOR DE PWR_MGMT_1
+		HAL_I2C_Mem_Write(&hi2c4,MPU6050_ADDR,PWR_MGMT_1,1,&data,1,1000); //ENVIA PWR_MGMT_1
+		data = 0b00000111; //ASIGNA EL VALOR DE SMPLRT_DIV
+		HAL_I2C_Mem_Write(&hi2c4,MPU6050_ADDR,SMPLRT_DIV,1,&data,1,1000); //ENVIA SMPLRT_DIV
+		data = 0; //ASIGNA EL VALOR DE  GYRO_CONFIG
+		HAL_I2C_Mem_Write(&hi2c4,MPU6050_ADDR,GYRO_CONFIG,1,&data,1,1000); //ENVIA GYRO_CONFIG
+		data = 0; //ASIGNA EL VALOR DE ACCEL_CONFIG
+		HAL_I2C_Mem_Write(&hi2c4,MPU6050_ADDR,ACCEL_CONFIG,1,&data,1,1000); //ENVIA ACCEL_CONFIG
+	}
+}
 
+float MPU6050_READ_TEMP(void){ /*LEE EL VALOR DE LA TEMPERATURA*/
+	/*Temperature in degrees C = (TEMP_OUT Register Value as a signed quantity)/340 + 36.53*/
+	uint8_t MEASURE_TEMP[2];  /* VECTOR DE VALORES MEDIDOS |TEMP_H|TEMP_L|*/
+	HAL_I2C_Mem_Read(&hi2c4,MPU6050_ADDR,TEMP_OUT_H,1,&MEASURE_TEMP[0],1,1000); //GUARDA LA MEDDIDA EN M[0]
+	HAL_I2C_Mem_Read(&hi2c4,MPU6050_ADDR,TEMP_OUT_L,1,&MEASURE_TEMP[1],1,1000); //GUARDA LA MEDDIDA EN M[1]
+
+	int16_t TEMP_RAW = (int16_t)(MEASURE_TEMP[0] << 8 | MEASURE_TEMP[1]); /*JUNTA LOS DATOS EN UN ESPACIO DE MEMORIA DE 16 BITS (TEMP_RAW)*/
+	float TEMP = (TEMP_RAW/340.0) +36.53; /*TEMPERATURA EN C*/
+	return TEMP;
+}
 /* USER CODE END 4 */
 
 /**

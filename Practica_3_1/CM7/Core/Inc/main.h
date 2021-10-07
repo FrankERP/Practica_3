@@ -54,8 +54,8 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void MPU6050_init();
-void
+void MPU6050_init(void);
+float MPU6050_READ_TEMP(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -69,6 +69,8 @@ void
 #define GYRO_XOUT_H 0x43
 #define PWR_MGMT_1 0x6B
 #define ACCEL_XOUTH_H 0X3B
+#define TEMP_OUT_H 0x41        /*(HIGH)These registers store the most recent temperature sensor measurement.*/
+#define TEMP_OUT_L 0x42     /*(LOW)*/
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
